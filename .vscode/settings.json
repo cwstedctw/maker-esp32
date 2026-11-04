@@ -1,0 +1,11 @@
+{
+  "files.exclude": {
+    "**/__pycache__": true
+  },
+  "python.analysis.extraPaths": [
+    "${workspaceFolder}",
+    "${workspaceFolder}/lib"
+  ],
+  "python.defaultInterpreterPath": "${workspaceFolder}/.venv/Scripts/python.exe",
+  "python.linting.enabled": true
+}

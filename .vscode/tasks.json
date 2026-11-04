@@ -1,0 +1,81 @@
+{
+  "version": "2.0.0",
+  "tasks": [
+    {
+      "label": "ESP32: 環境檢查",
+      "type": "shell",
+      "command": "powershell",
+      "args": ["-ExecutionPolicy", "Bypass", "-File", "tools/check_env.ps1"],
+      "options": { "cwd": "${workspaceFolder}" },
+      "problemMatcher": []
+    },
+    {
+      "label": "ESP32: 環境設定 (自動修復)",
+      "type": "shell",
+      "command": "powershell",
+      "args": ["-ExecutionPolicy", "Bypass", "-File", "tools/check_env.ps1", "-Fix"],
+      "options": { "cwd": "${workspaceFolder}" },
+      "problemMatcher": []
+    },
+    {
+      "label": "ESP32: Upload all",
+      "type": "shell",
+      "command": "powershell",
+      "args": ["-ExecutionPolicy", "Bypass", "-File", "tools/upload.ps1"],
+      "options": { "cwd": "${workspaceFolder}" },
+      "problemMatcher": [],
+      "group": { "kind": "build", "isDefault": true }
+    },
+    {
+      "label": "ESP32: Upload lesson (pick one)",
+      "type": "shell",
+      "command": "powershell",
+      "args": ["-ExecutionPolicy", "Bypass", "-File", "tools/upload.ps1", "-Lesson", "${input:lessonName}"],
+      "options": { "cwd": "${workspaceFolder}" },
+      "problemMatcher": []
+    },
+    {
+      "label": "ESP32: Soft reset",
+      "type": "shell",
+      "command": "uv",
+      "args": ["run", "mpremote", "connect", "auto", "reset"],
+      "options": { "cwd": "${workspaceFolder}" },
+      "problemMatcher": []
+    },
+    {
+      "label": "ESP32: Serial monitor",
+      "type": "shell",
+      "command": "uv",
+      "args": ["run", "mpremote", "connect", "auto", "repl"],
+      "options": { "cwd": "${workspaceFolder}" },
+      "isBackground": false,
+      "problemMatcher": []
+    },
+    {
+      "label": "ESP32: Generate font",
+      "type": "shell",
+      "command": "uv",
+      "args": ["run", "--extra", "font", "python", "tools/gen_font.py"],
+      "options": { "cwd": "${workspaceFolder}" },
+      "problemMatcher": []
+    }
+  ],
+  "inputs": [
+    {
+      "id": "lessonName",
+      "type": "pickString",
+      "description": "選擇要上傳的課程",
+      "options": [
+        "d1_led",
+        "d2_rgb",
+        "d3_buzzer",
+        "d4_oled",
+        "d5_sensors",
+        "d6_buttons",
+        "d7_ir",
+        "d8_relay",
+        "d9_full_demo"
+      ]
+    }
+  ]
+}
