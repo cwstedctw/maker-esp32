@@ -59,6 +59,7 @@ Mac 終端機也可以直接跑：`./tools/upload.sh d1_led`（連接埠預設�
 ```powershell
 # 1. 先備份整顆 4 MB flash（約 100 秒；要還原就 write-flash 0 這個檔）
 uv run esptool --port COM4 --baud 460800 read-flash 0 ALL backup-板子編號.bin
+# Mac 用 /dev/cu.usbserial-0001；Intel Mac 實測 --baud 460800 讀回來會不完整，拿掉 --baud 用預設速率（約 5 分鐘）
 # 2. 下載韌體：https://micropython.org/resources/firmware/ESP32_GENERIC-20260824-v1.29.0.bin
 # 3. 清除再寫入
 uv run esptool --port COM4 erase-flash

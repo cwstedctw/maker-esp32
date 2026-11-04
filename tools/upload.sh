@@ -10,7 +10,9 @@
 # ============================================
 
 PORT="${ESP32_PORT:-auto}"
-MPREMOTE="uv run mpremote connect $PORT"
+# Mac／Linux 一開序列埠板子就會重開（CP210x 的 DTR），要等開機訊息印完才進得了 raw REPL，
+# 所以每次連線先 sleep 2（2026-11-04 Intel Mac 實測：沒這行會 "could not enter raw repl"）
+MPREMOTE="uv run mpremote connect $PORT sleep 2"
 
 if [ -z "$1" ]; then
     echo "=== 上傳全部檔案到 ESP32 ==="
