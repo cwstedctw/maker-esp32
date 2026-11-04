@@ -52,6 +52,23 @@ Mac：`ESP32_PORT=/dev/cu.usbserial-0001 ./tools/upload.sh d1_led`（`ls /dev/cu
 - mpremote 1.29.0、esptool 5.6.0（`uv sync` 依 `uv.lock` 安裝）。
 - USB 晶片是 Silicon Labs **CP2102**：Windows 要有 CP210x 驅動才會出現 COM port（安裝要系統管理員；教室電腦由學校預裝）。
 
+## 助教：重燒韌體（板子不是 v1.29.0、或跑著不理 Ctrl+C 的舊程式）
+
+先跑過一次一鍵安裝或 `uv sync`，在 `maker-esp32` 裡（`COM4` 換成環境檢查找到的連接埠）：
+
+```powershell
+# 1. 先備份整顆 4 MB flash（約 100 秒；要還原就 write-flash 0 這個檔）
+uv run esptool --port COM4 --baud 460800 read-flash 0 ALL backup-板子編號.bin
+# 2. 下載韌體：https://micropython.org/resources/firmware/ESP32_GENERIC-20260824-v1.29.0.bin
+# 3. 清除再寫入
+uv run esptool --port COM4 erase-flash
+uv run esptool --port COM4 --baud 460800 write-flash -z 0x1000 ESP32_GENERIC-20260824-v1.29.0.bin
+# 4. 確認版本，應該印出 MicroPython v1.29.0
+uv run mpremote connect COM4 exec "import sys; print(sys.version)"
+```
+
+最後跑 VS Code 任務「ESP32: Upload all」把課程放回去。燒錄中斷就按住 BOOT、短按 EN，再重跑第 3 步。
+
 ## 硬體對應表（EZ Start Kit+）
 
 | 元件 | GPIO |
