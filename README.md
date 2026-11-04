@@ -33,7 +33,7 @@ setup-vscode-codex.cmd  Windows 一鍵安裝（雙擊）
 
 ## VS Code 任務
 
-`Ctrl+Shift+P` → `Tasks: Run Task`：
+`Ctrl+Shift+P`（Mac 是 `⌘⇧P`）→ `Tasks: Run Task`。同一組任務在 Mac／Linux 會自動改跑 `tools/upload.sh`（Windows 跑 `.ps1`）：
 
 | 任務 | 做什麼 |
 |---|---|
@@ -44,13 +44,13 @@ setup-vscode-codex.cmd  Windows 一鍵安裝（雙擊）
 | ESP32: Serial monitor | 看板子印出的文字；`Ctrl+C` 中斷、`Ctrl+]` 離開 |
 | ESP32: Generate font | 重新產生中文字型 |
 
-Mac：`ESP32_PORT=/dev/cu.usbserial-0001 ./tools/upload.sh d1_led`（`ls /dev/cu.*` 找連接埠）。
+Mac 終端機也可以直接跑：`./tools/upload.sh d1_led`（連接埠預設自動找；要指定就 `ESP32_PORT=/dev/cu.usbserial-0001 ./tools/upload.sh d1_led`，用 `ls /dev/cu.*` 找）。
 
 ## 版本
 
 - 韌體：MicroPython **v1.29.0**（ESP32_GENERIC，2026-08-24），燒在 `0x1000`。板子是舊版時「環境檢查」會提醒，請助教重燒。
 - mpremote 1.29.0、esptool 5.6.0（`uv sync` 依 `uv.lock` 安裝）。
-- USB 晶片是 Silicon Labs **CP2102**：Windows 要有 CP210x 驅動才會出現 COM port（安裝要系統管理員；教室電腦由學校預裝）。
+- USB 晶片是 Silicon Labs **CP2102**：Windows 要有 CP210x 驅動才會出現 COM port（安裝要系統管理員；教室電腦由學校預裝）；Mac 不用裝驅動（macOS 內建），插上就多一個 `/dev/cu.usbserial-…`。
 
 ## 助教：重燒韌體（板子不是 v1.29.0、或跑著不理 Ctrl+C 的舊程式）
 

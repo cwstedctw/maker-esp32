@@ -5,49 +5,192 @@
       "label": "ESP32: 環境檢查",
       "type": "shell",
       "command": "powershell",
-      "args": ["-ExecutionPolicy", "Bypass", "-File", "tools/check_env.ps1"],
-      "options": { "cwd": "${workspaceFolder}" },
-      "problemMatcher": []
+      "args": [
+        "-ExecutionPolicy",
+        "Bypass",
+        "-File",
+        "tools/check_env.ps1"
+      ],
+      "options": {
+        "cwd": "${workspaceFolder}"
+      },
+      "problemMatcher": [],
+      "windows": {
+        "command": "powershell",
+        "args": [
+          "-ExecutionPolicy",
+          "Bypass",
+          "-File",
+          "tools/check_env.ps1"
+        ]
+      },
+      "osx": {
+        "command": "bash",
+        "args": [
+          "-c",
+          "echo '--- 序列埠 ---'; ls /dev/cu.* ; echo '--- 工具 ---'; uv run mpremote version && uv run esptool version | head -1; echo '--- 板子韌體 ---'; uv run mpremote connect auto exec 'import sys; print(sys.version)'"
+        ]
+      },
+      "linux": {
+        "command": "bash",
+        "args": [
+          "-c",
+          "echo '--- 序列埠 ---'; ls /dev/ttyUSB* /dev/ttyACM* ; echo '--- 工具 ---'; uv run mpremote version && uv run esptool version | head -1; echo '--- 板子韌體 ---'; uv run mpremote connect auto exec 'import sys; print(sys.version)'"
+        ]
+      }
     },
     {
       "label": "ESP32: 環境設定 (自動修復)",
       "type": "shell",
       "command": "powershell",
-      "args": ["-ExecutionPolicy", "Bypass", "-File", "tools/check_env.ps1", "-Fix"],
-      "options": { "cwd": "${workspaceFolder}" },
-      "problemMatcher": []
+      "args": [
+        "-ExecutionPolicy",
+        "Bypass",
+        "-File",
+        "tools/check_env.ps1",
+        "-Fix"
+      ],
+      "options": {
+        "cwd": "${workspaceFolder}"
+      },
+      "problemMatcher": [],
+      "windows": {
+        "command": "powershell",
+        "args": [
+          "-ExecutionPolicy",
+          "Bypass",
+          "-File",
+          "tools/check_env.ps1",
+          "-Fix"
+        ]
+      },
+      "osx": {
+        "command": "bash",
+        "args": [
+          "-c",
+          "uv sync"
+        ]
+      },
+      "linux": {
+        "command": "bash",
+        "args": [
+          "-c",
+          "uv sync"
+        ]
+      }
     },
     {
       "label": "ESP32: Upload all",
       "type": "shell",
       "command": "powershell",
-      "args": ["-ExecutionPolicy", "Bypass", "-File", "tools/upload.ps1"],
-      "options": { "cwd": "${workspaceFolder}" },
+      "args": [
+        "-ExecutionPolicy",
+        "Bypass",
+        "-File",
+        "tools/upload.ps1"
+      ],
+      "options": {
+        "cwd": "${workspaceFolder}"
+      },
       "problemMatcher": [],
-      "group": { "kind": "build", "isDefault": true }
+      "group": {
+        "kind": "build",
+        "isDefault": true
+      },
+      "windows": {
+        "command": "powershell",
+        "args": [
+          "-ExecutionPolicy",
+          "Bypass",
+          "-File",
+          "tools/upload.ps1"
+        ]
+      },
+      "osx": {
+        "command": "bash",
+        "args": [
+          "tools/upload.sh"
+        ]
+      },
+      "linux": {
+        "command": "bash",
+        "args": [
+          "tools/upload.sh"
+        ]
+      }
     },
     {
       "label": "ESP32: Upload lesson (pick one)",
       "type": "shell",
       "command": "powershell",
-      "args": ["-ExecutionPolicy", "Bypass", "-File", "tools/upload.ps1", "-Lesson", "${input:lessonName}"],
-      "options": { "cwd": "${workspaceFolder}" },
-      "problemMatcher": []
+      "args": [
+        "-ExecutionPolicy",
+        "Bypass",
+        "-File",
+        "tools/upload.ps1",
+        "-Lesson",
+        "${input:lessonName}"
+      ],
+      "options": {
+        "cwd": "${workspaceFolder}"
+      },
+      "problemMatcher": [],
+      "windows": {
+        "command": "powershell",
+        "args": [
+          "-ExecutionPolicy",
+          "Bypass",
+          "-File",
+          "tools/upload.ps1",
+          "-Lesson",
+          "${input:lessonName}"
+        ]
+      },
+      "osx": {
+        "command": "bash",
+        "args": [
+          "tools/upload.sh",
+          "${input:lessonName}"
+        ]
+      },
+      "linux": {
+        "command": "bash",
+        "args": [
+          "tools/upload.sh",
+          "${input:lessonName}"
+        ]
+      }
     },
     {
       "label": "ESP32: Soft reset",
       "type": "shell",
       "command": "uv",
-      "args": ["run", "mpremote", "connect", "auto", "reset"],
-      "options": { "cwd": "${workspaceFolder}" },
+      "args": [
+        "run",
+        "mpremote",
+        "connect",
+        "auto",
+        "reset"
+      ],
+      "options": {
+        "cwd": "${workspaceFolder}"
+      },
       "problemMatcher": []
     },
     {
       "label": "ESP32: Serial monitor",
       "type": "shell",
       "command": "uv",
-      "args": ["run", "mpremote", "connect", "auto", "repl"],
-      "options": { "cwd": "${workspaceFolder}" },
+      "args": [
+        "run",
+        "mpremote",
+        "connect",
+        "auto",
+        "repl"
+      ],
+      "options": {
+        "cwd": "${workspaceFolder}"
+      },
       "isBackground": false,
       "problemMatcher": []
     },
@@ -55,8 +198,16 @@
       "label": "ESP32: Generate font",
       "type": "shell",
       "command": "uv",
-      "args": ["run", "--extra", "font", "python", "tools/gen_font.py"],
-      "options": { "cwd": "${workspaceFolder}" },
+      "args": [
+        "run",
+        "--extra",
+        "font",
+        "python",
+        "tools/gen_font.py"
+      ],
+      "options": {
+        "cwd": "${workspaceFolder}"
+      },
       "problemMatcher": []
     }
   ],
