@@ -9,9 +9,11 @@
     3. Python（沒有或低於 3.10 才裝，裝 winget 上最新的 3.x）
     4. uv（裝 mpremote、esptool 用；已裝就更新）
     5. VS Code 擴充功能：Codex、Python、Serial Monitor（已裝就更新）
-    6. ESP32 資料夾：uv sync --upgrade（最新 mpremote、esptool），再跑 tools\check_env.ps1 看結果
+    6. ESP32 資料夾：uv sync（照 uv.lock 裝老師測過的 mpremote、esptool），再跑 tools\check_env.ps1 看結果
   不會裝 USB 驅動（要系統管理員），也不會碰任何金鑰。
   Windows PowerShell 5.1 與 PowerShell 7 都能跑。
+  2026-11-05 改：第 6 步預設不加 --upgrade——學生一 clone 完跑這支，uv.lock 就被改掉、git 顯示有變更，
+  板子工具版本也會跑到老師沒測過的版本。老師要升版時加 -Upgrade，測過再 commit uv.lock。
 
 .PARAMETER EspFolder
   ESP32 資料夾（看得到 .vscode 和 tools 的那一層）。不填就找本腳本所在的資料夾。
@@ -19,13 +21,17 @@
 .PARAMETER NoOpen
   裝完不要自動打開 VS Code。
 
+.PARAMETER Upgrade
+  （老師用）第 6 步改跑 uv sync --upgrade，把 mpremote、esptool 升到最新並改寫 uv.lock。
+
 .EXAMPLE
   雙擊 setup-vscode-codex.cmd
   或：powershell -ExecutionPolicy Bypass -File .\setup-vscode-codex.ps1
 #>
 param(
     [string]$EspFolder = "",
-    [switch]$NoOpen
+    [switch]$NoOpen,
+    [switch]$Upgrade
 )
 
 $ErrorActionPreference = "Continue"
@@ -152,9 +158,15 @@ if (-not $code) {
     }
 }
 if ($code) {
-    $ver = (& $code --version 2>&1 | Select-Object -First 1)
-    Write-Host "  OK: VS Code $ver" -ForegroundColor Green
-    Add-Result "VS Code" $true "$ver"
+    # 只認像 1.145.0 的那一行：2026-11-05 在 Codex 沙盒裡跑時，第一行是 crashpad 的錯誤訊息，被當成版本印成 OK
+    $ver = @(& $code --version 2>$null) | Where-Object { $_ -match '^\d+\.\d+\.\d+' } | Select-Object -First 1
+    if ($ver) {
+        Write-Host "  OK: VS Code $ver" -ForegroundColor Green
+        Add-Result "VS Code" $true "$ver"
+    } else {
+        Write-Host "  !! 找得到 VS Code（$code），但讀不到版本號；如果是 Codex 在沙盒裡跑的，請它在沙盒外重跑。" -ForegroundColor Red
+        Add-Result "VS Code" $false "讀不到版本號"
+    }
 } else {
     Write-Host "  !! VS Code 沒裝好，請舉手。手動下載：https://code.visualstudio.com/" -ForegroundColor Red
     Add-Result "VS Code" $false "沒裝好"
@@ -265,8 +277,13 @@ if (-not $isEsp) {
         Add-Result "資料夾位置" $false "路徑太長（$($fullEsp.Length) 字元）"
     }
     Push-Location $EspFolder
-    Write-Host "  -> uv sync --upgrade（最新 mpremote、esptool，第一次約 1 分鐘）..." -ForegroundColor Cyan
-    & uv sync --upgrade 2>&1 | Where-Object { $_ -match "\S" } | ForEach-Object { Write-Host "     $_" -ForegroundColor DarkGray }
+    if ($Upgrade) {
+        Write-Host "  -> uv sync --upgrade（老師模式：升到最新 mpremote、esptool，會改寫 uv.lock）..." -ForegroundColor Cyan
+        & uv sync --upgrade 2>&1 | Where-Object { $_ -match "\S" } | ForEach-Object { Write-Host "     $_" -ForegroundColor DarkGray }
+    } else {
+        Write-Host "  -> uv sync（照 uv.lock 裝 mpremote、esptool，第一次約 1 分鐘）..." -ForegroundColor Cyan
+        & uv sync 2>&1 | Where-Object { $_ -match "\S" } | ForEach-Object { Write-Host "     $_" -ForegroundColor DarkGray }
+    }
     $okTools = (Test-Path ".venv\Scripts\mpremote.exe") -and (Test-Path ".venv\Scripts\esptool.exe")
     if ($okTools) {
         # 版本從 dist-info 資料夾名稱讀（mpremote-1.29.0.dist-info），讀不到就寫「?」，不讓它中斷
@@ -302,10 +319,11 @@ foreach ($r in $results) {
 Write-Host ""
 Write-Host "下一步：" -ForegroundColor Cyan
 Write-Host "  1. VS Code 問「是否信任這個資料夾的作者」→ 按 Yes, I trust the authors。"
-Write-Host "     上方出現 Restricted Mode 黃條 → 按 Manage → Trust。沒信任的話 Codex 和 ESP32 任務都不能用。"
-Write-Host "  2. 在 VS Code 左邊找 Codex 圖示（沒看到就 Ctrl+Shift+P → Codex: Open Codex Sidebar）。"
-Write-Host "     右邊那個 Chat 面板是 GitHub Copilot，不是 Codex，跳出 GitHub 登入可以按 Cancel。"
+Write-Host "     沒跳出詢問、只在上方看到 Restricted Mode 長條 → 按 Manage → Trust。沒信任的話 Codex 和 ESP32 任務都不能用。"
+Write-Host "  2. 右側面板上方點 Codex 分頁（沒看到就 Ctrl+Shift+P → Codex: Open Codex Sidebar）。"
+Write-Host "     同一排的 Chat 分頁是 GitHub Copilot，不是 Codex，跳出 GitHub 登入可以按 Cancel。"
 Write-Host "  3. Codex 還沒登入的畫面按 Use API Key，貼上你在課程專案建的金鑰，按 OK。"
+Write-Host "     登入後把輸入框下方的模型換成老師公告的那一個（115-1 創客課是 6 Luna）。"
 Write-Host "  4. 金鑰只貼在那一格；用完記得登出（教室電腦一定要）。"
 Write-Host "  5. USB 驅動如果上面顯示有問題，舉手找助教（要系統管理員權限）。"
 Write-Host ""
