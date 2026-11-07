@@ -9,8 +9,8 @@
 from machine import Pin, ADC, PWM, SoftI2C
 import dht
 import neopixel
-import ssd1306
 import time
+from lib import ssd1306  # 指定套件內的驅動，避免載入板上其他同名檔案
 from lib.zhfont import draw_text
 
 
