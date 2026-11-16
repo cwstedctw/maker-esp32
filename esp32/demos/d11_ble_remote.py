@@ -198,7 +198,11 @@ try:
                 show("BLE 遙控", NAME, "紅燈 開" if on else "紅燈 關")
                 print("手機說：紅燈", "開" if on else "關")
             elif kind == h_rx:                       # 文字指令
-                run_command(value.decode())
+                try:
+                    run_command(value.decode())
+                except Exception as e:               # 打錯字（例如 rgb a b c）不要讓整支程式停掉
+                    print("指令看不懂：", e)
+                    reply("? try: red on / green on / rgb 255 0 0 / beep / off / temp")
         # 2) 板子的 A 鍵 → 通知手機（按下＝1、放開＝0）
         now = btn_a.value()
         if now != last_button:
