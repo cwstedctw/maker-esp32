@@ -225,7 +225,9 @@
         "d6_buttons",
         "d7_ir",
         "d8_relay",
-        "d9_full_demo"
+        "d9_full_demo",
+        "d10_wifi_web",
+        "d11_ble_remote"
       ]
     }
   ]

@@ -21,7 +21,9 @@ esp32/                  上傳到 ESP32 的檔案
   lib/ezkit.py          共用硬體模組（所有元件腳位）
   lib/ssd1306.py        OLED 驅動（micropython-lib，MIT；韌體沒內建）
   lib/zhfont.py         中文點陣字型
-  demos/d1_led.py … d9_full_demo.py   九課範例
+  demos/d1_led.py … d9_full_demo.py   九課範例（板上元件）
+  demos/d10_wifi_web.py   第 10 課：WiFi 網頁遙控（手機開網頁控制板子）
+  demos/d11_ble_remote.py 第 11 課：藍牙遙控（手機 App 控制板子）
 tools/
   check_env.ps1         Windows 環境檢查（-Fix 自動修部分項目）
   upload.ps1            Windows 上傳（VS Code 任務會呼叫它）
@@ -29,6 +31,7 @@ tools/
   gen_font.py           產生中文字型
 .vscode/                VS Code 任務與設定
 setup-vscode-codex.cmd  Windows 一鍵安裝（雙擊）
+AGENTS.md               給 Codex 讀的規則（腳位、上傳方式、不能做的事）
 ```
 
 ## VS Code 任務
