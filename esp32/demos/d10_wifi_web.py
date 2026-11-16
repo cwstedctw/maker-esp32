@@ -46,7 +46,7 @@ state = {
     "requests": 0,
 }
 LEDS = {"red": led_red, "yellow": led_yellow, "blue": led_blue}
-NAMES_ZH = {"red": "紅燈", "yellow": "黃燈", "blue": "藍燈"}
+NAMES_ZH = {"red": "紅燈", "yellow": "黃燈", "blue": "綠燈"}   # 第三顆在板子上是綠色（程式裡叫 led_blue）
 
 
 def show(line1, line2="", line3="", line4=""):
@@ -140,7 +140,7 @@ h1{font-size:22px;margin:0 0 4px}
 .row{display:flex;gap:10px;flex-wrap:wrap}
 button{flex:1;min-width:90px;font-size:18px;padding:14px 8px;border:0;border-radius:12px;background:#ddd;color:#222}
 button.on{color:#fff}
-#red.on{background:#d33}#yellow.on{background:#e8b400}#blue.on{background:#2a6fdb}
+#red.on{background:#d33}#yellow.on{background:#e8b400}#blue.on{background:#2e9e4f}
 .sensors{display:grid;grid-template-columns:1fr 1fr;gap:8px;font-size:16px}
 .sensors b{font-size:22px;display:block}
 input[type=color]{width:100%;height:48px;border:0;background:none}
@@ -151,10 +151,14 @@ input[type=color]{width:100%;height:48px;border:0;background:none}
 <div class="card"><div class="row">
 <button id="red" onclick="led('red')">紅燈</button>
 <button id="yellow" onclick="led('yellow')">黃燈</button>
-<button id="blue" onclick="led('blue')">藍燈</button>
+<button id="blue" onclick="led('blue')">綠燈</button>
 </div></div>
-<div class="card">RGB 彩色燈：選一個顏色
-<input type="color" id="color" value="#000000" onchange="rgb(this.value)">
+<div class="card">RGB 彩色燈：按一個顏色，或用下面的色盤自己選
+<div class="row">
+<button onclick="rgb('#ff0000')">紅</button><button onclick="rgb('#00ff00')">綠</button>
+<button onclick="rgb('#0000ff')">藍</button><button onclick="rgb('#ffffff')">白</button>
+</div>
+<input type="color" id="color" value="#ff8800" onchange="rgb(this.value)">
 <div class="row"><button onclick="rgb('#000000')">彩色燈關</button><button onclick="call('/api/beep')">嗶一聲</button></div>
 </div>
 <div class="card sensors">
@@ -243,6 +247,7 @@ def handle(conn):
     elif route == "/api/rgb":
         set_rgb(args.get("r", 0), args.get("g", 0), args.get("b", 0))
         state["last"] = "彩色燈"
+        print("彩色燈 RGB =", state["rgb"])
     elif route == "/api/beep":
         beep()
         state["last"] = "蜂鳴器"

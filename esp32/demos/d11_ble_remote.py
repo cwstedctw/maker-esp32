@@ -13,7 +13,7 @@
 #
 # 板子提供兩組「服務」（service）：
 #   1. LED 與按鈕服務（Nordic LBS）：nRF Blinky 用這組
-#   2. 文字指令服務（Nordic UART）：傳 "red on"、"rgb 0 0 255"、"beep" 這種指令
+#   2. 文字指令服務（Nordic UART）：傳 "red on"、"green on"、"rgb 0 0 255"、"beep" 這種指令
 #
 # 你會學到：
 #   - BLE 的裝置名稱、服務、特徵值（characteristic）是什麼
@@ -143,12 +143,13 @@ def reply(text):
 
 
 def run_command(text):
-    """文字指令：red on / yellow off / blue on / rgb 255 0 0 / beep / off / temp"""
+    """文字指令：red on / yellow off / green on / rgb 255 0 0 / beep / off / temp
+    第三顆燈在板子上是綠色（程式裡叫 led_blue），green、blue 兩個字都收。"""
     words = text.strip().lower().split()
     if not words:
         return
     cmd = words[0]
-    pins = {"red": led_red, "yellow": led_yellow, "blue": led_blue}
+    pins = {"red": led_red, "yellow": led_yellow, "green": led_blue, "blue": led_blue}
     if cmd in pins and len(words) > 1:
         pins[cmd].value(1 if words[1] == "on" else 0)
         reply("OK " + cmd + " " + words[1])
@@ -170,7 +171,7 @@ def run_command(text):
         except OSError:
             reply("DHT11 read failed")
     else:
-        reply("? try: red on / rgb 255 0 0 / beep / off / temp")
+        reply("? try: red on / green on / rgb 255 0 0 / beep / off / temp")
     print("手機說：", text.strip())
 
 

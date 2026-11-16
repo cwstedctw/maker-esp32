@@ -11,3 +11,6 @@ maker-test.txt
 
 # VS Code／Chromium 出錯時寫在目前資料夾的記錄檔（2026-11-05 Codex 沙盒裡跑 code --version 產生）
 debug.log
+
+# 老師示範用的私人設定（WiFi 密碼、Telegram token、環境部金鑰），不進 git
+esp32/my_secrets.py

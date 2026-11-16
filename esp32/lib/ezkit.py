@@ -16,11 +16,8 @@ from lib.zhfont import draw_text
 
 # === LED 燈 ===
 # 板子上有三顆 LED，分別是紅、黃、藍
-# Pin(腳位, Pin.OUT) 表示這個腳位是「輸出」，用來控制 LED 亮或滅
-
-led_red = Pin(16, Pin.OUT)      # 紅色 LED 接在 GPIO 16
-led_yellow = Pin(12, Pin.OUT)   # 黃色 LED 接在 GPIO 12
-led_blue = Pin(13, Pin.OUT)     # 藍色 LED 接在 GPIO 13
+# 每顆都有兩種用法：led_red.on()／off() 開關，led_red_pwm.duty(0~1023) 調亮度
+# 兩種用法共用同一個 PWM（說明見下面的 class LED）
 
 # PWM 版本的 LED
 # PWM 就像快速開關燈，開的時間越長就越亮
@@ -30,6 +27,42 @@ led_blue = Pin(13, Pin.OUT)     # 藍色 LED 接在 GPIO 13
 led_red_pwm = PWM(Pin(16), freq=1000, duty=0)
 led_yellow_pwm = PWM(Pin(12), freq=1000, duty=0)
 led_blue_pwm = PWM(Pin(13), freq=1000, duty=0)
+
+
+class LED:
+    """一顆 LED 的開關：on()、off()、value(1)、value(0)。
+
+    同一隻腳如果先建 Pin(16, Pin.OUT)、再建 PWM(Pin(16))，後來的 PWM 會把腳搶走，
+    之後 Pin 的 on() 就不會亮（2026-11-16 實板測到）。所以開關也走同一個 PWM：
+    on() 就是調到最亮，off() 就是調到 0；要調亮度照樣用 led_red_pwm.duty(0~1023)。
+    """
+
+    def __init__(self, pwm):
+        self._pwm = pwm
+        self._on = 0          # 自己記住開或關（PWM 讀回來的數字不可靠）
+
+    def on(self):
+        self.value(1)
+
+    def off(self):
+        self.value(0)
+
+    def value(self, v=None):
+        if v is None:
+            return self._on
+        self._on = 1 if v else 0
+        self._pwm.duty(1023 if self._on else 0)
+
+    def __call__(self, v=None):
+        return self.value(v)
+
+    def toggle(self):
+        self.value(0 if self.value() else 1)
+
+
+led_red = LED(led_red_pwm)          # 紅色 LED（GPIO 16）
+led_yellow = LED(led_yellow_pwm)    # 黃色 LED（GPIO 12）
+led_blue = LED(led_blue_pwm)        # 藍色 LED（GPIO 13）
 
 
 # === 按鈕 ===

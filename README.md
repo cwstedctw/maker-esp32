@@ -24,6 +24,7 @@ esp32/                  上傳到 ESP32 的檔案
   demos/d1_led.py … d9_full_demo.py   九課範例（板上元件）
   demos/d10_wifi_web.py   第 10 課：WiFi 網頁遙控（手機開網頁控制板子）
   demos/d11_ble_remote.py 第 11 課：藍牙遙控（手機 App 控制板子）
+  demos/d12_aqi_telegram.py 第 12 課：上網抓空氣品質 → OLED → Telegram（要連能上網的 2.4 GHz 熱點）
 tools/
   check_env.ps1         Windows 環境檢查（-Fix 自動修部分項目）
   upload.ps1            Windows 上傳（VS Code 任務會呼叫它）
@@ -79,7 +80,7 @@ uv run mpremote connect COM4 exec "import sys; print(sys.version)"
 |------|------|
 | 紅色 LED | 16 |
 | 黃色 LED | 12 |
-| 藍/綠色 LED | 13 |
+| 綠色 LED（程式名 led_blue） | 13 |
 | WS2812 RGB LED x3 | 26 |
 | 被動蜂鳴器 | 14 |
 | 按鈕 A | 5 |

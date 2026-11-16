@@ -12,11 +12,11 @@
 
 ## 板子（Circus ESP32 EZ Start Kit+，MicroPython v1.29.0）
 
-所有元件已經在 `esp32/lib/ezkit.py` 設定好，範例都用 `from lib.ezkit import *`。**不要改腳位**，也不要在別的檔案重新設定同一個腳位。
+所有元件已經在 `esp32/lib/ezkit.py` 設定好，範例都用 `from lib.ezkit import *`。**不要改腳位**，也不要在別的檔案重新設定同一個腳位（例如再寫一次 `Pin(16, Pin.OUT)`，會把燈的控制搶走）。
 
 | 元件 | GPIO | ezkit 裡的名字 |
 |---|---|---|
-| 紅／黃／藍 LED | 16／12／13 | `led_red`、`led_yellow`、`led_blue`（PWM 版加 `_pwm`） |
+| 紅／黃／綠 LED | 16／12／13 | `led_red`、`led_yellow`、`led_blue`（第三顆板子上是綠色，名字沿用 `led_blue`）：`on()`、`off()`、`value(1)`；調亮度用 `led_red_pwm.duty(0~1023)` |
 | WS2812 彩色燈 ×3 | 26 | `np`（`np[i] = (r, g, b)` 後要 `np.write()`） |
 | 被動蜂鳴器 | 14 | `buzzer`（`freq()`、`duty()`；結束一定要 `duty(0)`） |
 | 按鈕 A／B | 5／36 | `btn_a`、`btn_b`（按下讀到 0） |

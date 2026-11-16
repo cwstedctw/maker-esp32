@@ -227,7 +227,8 @@
         "d8_relay",
         "d9_full_demo",
         "d10_wifi_web",
-        "d11_ble_remote"
+        "d11_ble_remote",
+        "d12_aqi_telegram"
       ]
     }
   ]
