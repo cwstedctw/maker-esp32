@@ -5,18 +5,18 @@
 ## 回答方式
 
 - 一律用繁體中文、台灣用語回答；程式碼、檔名、指令保留原文。
-- 每次只改學生要求的那一件事。改之前先把要改的檔案複製到 `maker-backup/`（資料夾不存在就建立）。
+- 每次只改學生要求的那一件事。改之前先把要改的檔案複製到 `maker-backup/`（資料夾不存在就建立）。**備份前先把 `WIFI_PASSWORD`、`TG_TOKEN`、`TG_CHAT_ID`、`MOENV_KEY` 這類密碼欄在備份裡改成空字串**——教室電腦是共用的，備份會留給下一個人看到。
 - 改完列出改了哪個檔案、哪幾行，用一兩句話說明為什麼。
 - **不要自己上傳到板子、不要燒錄韌體、不要安裝驅動**。上傳由學生用 VS Code 任務「ESP32: Upload lesson (pick one)」或「ESP32: Upload all」自己按。
 - 沒有在板子上跑過的東西，要寫「還沒在板子上測過」，不可以說「完成了」或「可以動了」。
 
 ## 板子（Circus ESP32 EZ Start Kit+，MicroPython v1.29.0）
 
-所有元件已經在 `esp32/lib/ezkit.py` 設定好，範例都用 `from lib.ezkit import *`。**不要改腳位**，也不要在別的檔案重新設定同一個腳位（例如再寫一次 `Pin(16, Pin.OUT)`，會把燈的控制搶走）。
+所有元件已經在 `esp32/lib/ezkit.py` 設定好，範例都用 `from lib.ezkit import *`。**不要改腳位**，也不要對 ezkit 已經用到的腳位再建立一次 `Pin(...)` 或 `PWM(...)`（例如再寫 `Pin(16, Pin.OUT)`，會跟 ezkit 的 PWM 互搶，燈就不聽話）。
 
 | 元件 | GPIO | ezkit 裡的名字 |
 |---|---|---|
-| 紅／黃／綠 LED | 16／12／13 | `led_red`、`led_yellow`、`led_blue`（第三顆板子上是綠色，名字沿用 `led_blue`）：`on()`、`off()`、`value(1)`；調亮度用 `led_red_pwm.duty(0~1023)` |
+| 紅／黃／綠 LED | 16／12／13 | `led_red`、`led_yellow`、`led_blue`（第三顆板子上是綠色，名字沿用 `led_blue`）：`on()`、`off()`、`value(1)`；調亮度用 `led_red_pwm.duty(0~1023)`。同一顆燈在一支程式裡只選一種用法（開關或調亮度），混用時 `value()` 讀回來的狀態會不準 |
 | WS2812 彩色燈 ×3 | 26 | `np`（`np[i] = (r, g, b)` 後要 `np.write()`） |
 | 被動蜂鳴器 | 14 | `buzzer`（`freq()`、`duty()`；結束一定要 `duty(0)`） |
 | 按鈕 A／B | 5／36 | `btn_a`、`btn_b`（按下讀到 0） |
