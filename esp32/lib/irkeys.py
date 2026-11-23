@@ -132,7 +132,7 @@ class IRKeys:
     def _handle(self, kind, code, t):
         held = self._code is not None and time.ticks_diff(t, self._seen) < HOLD_MS
         if kind == _FRAME:
-            self.last_kind = "NEC" if code < 0x1000000 else "其他編碼"
+            self.last_kind = "常見編碼" if code < 0x1000000 else "其他編碼"
             if held and code == self._code:
                 self._seen = t                  # 同一個鍵又送了一次整串：還按著，不算新的一下
             else:

@@ -84,7 +84,6 @@ def draw():
             draw_text(oled, 0, 16, "按遙控器的鍵")
         else:
             oled.text(code_text(last_code), 0, 20, 1)
-            oled.text(ir.last_kind if ir.last_kind == "NEC" else "", 80, 20, 1)
             label = KEY_LABELS.get(ir.name(last_code), "")
             draw_text(oled, 0, 32, "第{}次 {}".format(counts.get(last_code, 0), label))
         if note:
