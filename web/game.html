@@ -1,0 +1,611 @@
+<!doctype html>
+<html lang="zh-Hant">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>接球網頁遊戲</title>
+<!--
+  第 15 課：網頁遊戲（電腦版 Chrome／Edge 直接打開這個檔就能用，不用架站）
+  板子要先上傳 d15_web_serial.py。
+  這個檔分三段：
+    1. 連線這一段（Web Serial）：這段不要請 AI 改
+    2. 遊戲事件：接到球、結束、重來時叫板子做什麼（改這裡最簡單）
+    3. 畫面與遊戲：可以請 AI 改（配色、標題、球速、加功能）
+-->
+<style>
+  :root {
+    --bg: #f6f7f8;
+    --card: #ffffff;
+    --text: #1d2326;
+    --muted: #5d676d;
+    --line: #d9dee1;
+    --accent: #0f766e;
+    --accent-text: #ffffff;
+    --warn-bg: #fff4e5;
+    --warn-line: #e8a33c;
+    --ok: #15803d;
+    --bad: #b42318;
+    --bar: #0f766e;
+    --game-bg: #11181c;
+    --game-fg: #e7f6f3;
+    --ball: #f5b301;
+  }
+  @media (prefers-color-scheme: dark) {
+    :root:not([data-theme="light"]) {
+      --bg: #12171a;
+      --card: #1b2226;
+      --text: #e6ebee;
+      --muted: #9aa6ad;
+      --line: #2e383d;
+      --accent: #2dd4bf;
+      --accent-text: #08201d;
+      --warn-bg: #2a2214;
+      --warn-line: #b7832c;
+      --ok: #4ade80;
+      --bad: #f87171;
+      --bar: #2dd4bf;
+      --game-bg: #070b0d;
+      --game-fg: #d9f3ee;
+      --ball: #fbbf24;
+    }
+  }
+  :root[data-theme="dark"] {
+    --bg: #12171a;
+    --card: #1b2226;
+    --text: #e6ebee;
+    --muted: #9aa6ad;
+    --line: #2e383d;
+    --accent: #2dd4bf;
+    --accent-text: #08201d;
+    --warn-bg: #2a2214;
+    --warn-line: #b7832c;
+    --ok: #4ade80;
+    --bad: #f87171;
+    --bar: #2dd4bf;
+    --game-bg: #070b0d;
+    --game-fg: #d9f3ee;
+    --ball: #fbbf24;
+  }
+  * { box-sizing: border-box; }
+  body {
+    margin: 0;
+    background: var(--bg);
+    color: var(--text);
+    font-family: system-ui, -apple-system, "Segoe UI", "Microsoft JhengHei", "PingFang TC", "Noto Sans TC", sans-serif;
+    line-height: 1.5;
+  }
+  main { max-width: 980px; margin: 0 auto; padding: 16px; }
+  h1 { font-size: 1.4rem; margin: 4px 0 12px; }
+  h2 { font-size: 1rem; margin: 0 0 8px; color: var(--muted); font-weight: 600; }
+  .card {
+    background: var(--card);
+    border: 1px solid var(--line);
+    border-radius: 10px;
+    padding: 14px;
+    margin-bottom: 14px;
+  }
+  .row { display: flex; flex-wrap: wrap; gap: 8px; align-items: center; }
+  button {
+    font: inherit;
+    border: 1px solid var(--line);
+    background: var(--card);
+    color: var(--text);
+    border-radius: 8px;
+    padding: 7px 12px;
+    cursor: pointer;
+  }
+  button:hover { border-color: var(--accent); }
+  button:disabled { opacity: .5; cursor: not-allowed; }
+  button.primary { background: var(--accent); color: var(--accent-text); border-color: var(--accent); font-weight: 600; }
+  input[type=text] {
+    font: inherit; padding: 7px 10px; border-radius: 8px; border: 1px solid var(--line);
+    background: var(--bg); color: var(--text); min-width: 0; flex: 1 1 160px;
+  }
+  #status { font-weight: 600; }
+  #status.on { color: var(--ok); }
+  #status.off { color: var(--muted); }
+  #status.err { color: var(--bad); }
+  .notice {
+    background: var(--warn-bg);
+    border: 1px solid var(--warn-line);
+    border-radius: 10px;
+    padding: 12px 14px;
+    margin-bottom: 14px;
+  }
+  .grid { display: grid; grid-template-columns: 1fr 1.6fr; gap: 14px; }
+  @media (max-width: 720px) { .grid { grid-template-columns: 1fr; } }
+  .meter { margin: 6px 0 12px; }
+  .meter .label { display: flex; justify-content: space-between; font-size: .95rem; }
+  .meter .track { height: 10px; background: var(--line); border-radius: 5px; overflow: hidden; }
+  .meter .fill { height: 100%; width: 0; background: var(--bar); }
+  .pills { display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; }
+  .pill {
+    border: 1px solid var(--line); border-radius: 8px; text-align: center; padding: 8px 4px;
+    font-weight: 600; color: var(--muted);
+  }
+  .pill.on { border-color: var(--accent); color: var(--accent); }
+  .pill small { display: block; font-weight: 400; font-size: .8rem; }
+  canvas {
+    display: block; width: 100%; height: auto; border-radius: 8px;
+    background: var(--game-bg); touch-action: none;
+  }
+  .hint { color: var(--muted); font-size: .9rem; margin: 8px 0 0; }
+  .cmds button { font-family: ui-monospace, "Cascadia Mono", Consolas, monospace; font-size: .9rem; }
+  #log {
+    font-family: ui-monospace, "Cascadia Mono", Consolas, monospace; font-size: .8rem;
+    color: var(--muted); white-space: pre-wrap; word-break: break-all; margin: 8px 0 0;
+    max-height: 7.5em; overflow: auto;
+  }
+</style>
+</head>
+<body>
+<main>
+  <h1 id="title">接球網頁遊戲：用板子玩</h1>
+
+  <div id="unsupported" class="notice" hidden>
+    <strong>這個瀏覽器不能連板子。</strong>
+    網頁連 USB 用的是瀏覽器的 Web Serial 功能，只有<strong>電腦版的 Chrome 或 Edge</strong>有；
+    手機、Safari、Firefox 都沒有。請改用電腦版 Chrome 或 Edge 打開這個檔。
+    沒接板子也可以先用鍵盤的方向鍵玩。
+  </div>
+
+  <section class="card">
+    <div class="row">
+      <button id="connectBtn" class="primary">連接板子</button>
+      <button id="disconnectBtn" disabled>中斷連線</button>
+      <span id="status" class="off">還沒連線</span>
+    </div>
+    <p class="hint" id="statusHint">板子要先上傳第 15 課（d15_web_serial.py）。VS Code 的 Serial monitor 要先關掉，網頁才連得上。</p>
+  </section>
+
+  <div class="grid">
+    <section class="card">
+      <h2>板子現在的狀態</h2>
+      <div class="meter">
+        <div class="label"><span>旋鈕</span><span id="knobVal">-</span></div>
+        <div class="track"><div class="fill" id="knobBar"></div></div>
+      </div>
+      <div class="meter">
+        <div class="label"><span>光</span><span id="lightVal">-</span></div>
+        <div class="track"><div class="fill" id="lightBar"></div></div>
+      </div>
+      <div class="pills">
+        <div class="pill" id="pillA">A<small>按鈕</small></div>
+        <div class="pill" id="pillB">B<small>按鈕</small></div>
+        <div class="pill" id="pillKey"><span id="keyVal">-</span><small>遙控器</small></div>
+      </div>
+    </section>
+
+    <section class="card">
+      <h2>接球遊戲</h2>
+      <canvas id="game" width="320" height="200" aria-label="接球遊戲畫面"></canvas>
+      <p class="hint">轉旋鈕＝板子跟著移動；A／B、遙控器左右鍵、鍵盤方向鍵＝往左往右。結束後按空白鍵、A、B 或遙控器確定鍵重來。</p>
+    </section>
+  </div>
+
+  <section class="card">
+    <h2>叫板子做事（送文字指令）</h2>
+    <div class="row cmds">
+      <button data-cmd="red on">red on</button>
+      <button data-cmd="red off">red off</button>
+      <button data-cmd="yellow on">yellow on</button>
+      <button data-cmd="yellow off">yellow off</button>
+      <button data-cmd="green on">green on</button>
+      <button data-cmd="green off">green off</button>
+      <button data-cmd="rgb 255 0 0">rgb 255 0 0</button>
+      <button data-cmd="rgb 0 255 0">rgb 0 255 0</button>
+      <button data-cmd="rgb 0 0 255">rgb 0 0 255</button>
+      <button data-cmd="beep">beep</button>
+      <button data-cmd="off">off</button>
+    </div>
+    <div class="row" style="margin-top:10px">
+      <input type="text" id="cmdInput" placeholder="自己打指令，例如 rgb 255 120 0" autocomplete="off">
+      <button id="cmdSend">送出</button>
+    </div>
+    <div id="log"></div>
+  </section>
+</main>
+
+<script>
+/* =====================================================================
+   1. 連線這一段（Web Serial）：這段不要請 AI 改
+   ---------------------------------------------------------------------
+   - 板子每一行送一筆 JSON：{"knob":2048,"light":900,"a":0,"b":1,"key":"left"}
+   - 不是 JSON 的行（例如板子重開時印的開機訊息）一律略過
+   - 送給板子：sendCommand("beep") 這樣一行一個指令
+   - 要知道板子送來什麼：onBoardState(function (s) { ... })
+   ===================================================================== */
+const Serial = (function () {
+  let port = null;
+  let reader = null;
+  let keepReading = false;
+  let writeChain = Promise.resolve();
+  let lastLineAt = 0;
+  const listeners = [];
+  const statusListeners = [];
+
+  function setStatus(kind, text) {
+    statusListeners.forEach(function (f) { f(kind, text); });
+  }
+
+  function handleLine(line) {
+    line = line.trim();
+    if (!line.startsWith("{")) { logLine(line); return; }
+    let s;
+    try { s = JSON.parse(line); } catch (e) { logLine(line); return; }
+    if (typeof s !== "object" || s === null || typeof s.knob !== "number") { logLine(line); return; }
+    lastLineAt = performance.now();
+    const state = {
+      knob: s.knob | 0,
+      light: typeof s.light === "number" ? s.light | 0 : 0,
+      a: s.a ? 1 : 0,
+      b: s.b ? 1 : 0,
+      key: typeof s.key === "string" ? s.key : ""
+    };
+    listeners.forEach(function (f) { try { f(state); } catch (e) { console.error(e); } });
+  }
+
+  async function readLoop() {
+    const decoder = new TextDecoder();
+    let buf = "";
+    let broken = false;
+    while (keepReading && port && port.readable) {
+      reader = port.readable.getReader();
+      try {
+        while (true) {
+          const r = await reader.read();
+          if (r.done) break;
+          buf += decoder.decode(r.value, { stream: true });
+          let i;
+          while ((i = buf.indexOf("\n")) >= 0) {
+            handleLine(buf.slice(0, i));
+            buf = buf.slice(i + 1);
+          }
+          if (buf.length > 2000) buf = "";       // 太長沒換行：丟掉，免得越積越多
+        }
+      } catch (e) {
+        if (keepReading) {
+          keepReading = false;
+          broken = true;
+        }
+      } finally {
+        try { reader.releaseLock(); } catch (e) {}
+        reader = null;
+      }
+    }
+    if (broken) {
+      // 讀到一半斷掉：把連接埠關好，下次才能重新連
+      try { if (port) await port.close(); } catch (e) {}
+      port = null;
+      setStatus("err", "連線中斷了（線鬆了或板子重開）。請再按「連接板子」。");
+    }
+  }
+
+  async function connect() {
+    if (!("serial" in navigator)) return;
+    try {
+      port = await navigator.serial.requestPort();
+    } catch (e) {
+      setStatus("off", "沒有選連接埠。");
+      return;
+    }
+    try {
+      await port.open({ baudRate: 115200 });
+    } catch (e) {
+      port = null;
+      setStatus("err", "打不開連接埠：可能 VS Code 的 Serial monitor 還開著，或別的網頁已經連著。關掉再試一次。");
+      return;
+    }
+    try {
+      // 試著不要讓板子重開（有些電腦打開連接埠時板子會重開一次，那也沒關係）
+      await port.setSignals({ dataTerminalReady: false, requestToSend: false });
+    } catch (e) { /* 不支援就算了 */ }
+    keepReading = true;
+    lastLineAt = performance.now();
+    setStatus("on", "已連線，等板子送資料…");
+    readLoop();
+  }
+
+  async function disconnect() {
+    keepReading = false;
+    try { if (reader) await reader.cancel(); } catch (e) {}
+    try { await writeChain; } catch (e) {}
+    try { if (port) await port.close(); } catch (e) {}
+    port = null;
+    setStatus("off", "已中斷連線。");
+  }
+
+  function sendCommand(text) {
+    if (!port || !port.writable) return false;
+    const data = new TextEncoder().encode(String(text).trim() + "\n");
+    writeChain = writeChain.then(async function () {
+      if (!port || !port.writable) return;
+      const w = port.writable.getWriter();
+      try { await w.write(data); } finally { w.releaseLock(); }
+    }).catch(function (e) { console.warn("送不出去：", e); });
+    logLine("> " + String(text).trim());
+    return true;
+  }
+
+  if ("serial" in navigator) {
+    navigator.serial.addEventListener("disconnect", function (ev) {
+      if (port && ev.target === port) {
+        keepReading = false;
+        port = null;
+        setStatus("err", "板子拔掉了。插回去後再按「連接板子」。");
+      }
+    });
+  }
+
+  return {
+    supported: "serial" in navigator,
+    connect: connect,
+    disconnect: disconnect,
+    sendCommand: sendCommand,
+    isConnected: function () { return !!port; },
+    msSinceLastLine: function () { return performance.now() - lastLineAt; },
+    onBoardState: function (f) { listeners.push(f); },
+    onStatus: function (f) { statusListeners.push(f); }
+  };
+})();
+
+function sendCommand(text) { return Serial.sendCommand(text); }
+function onBoardState(f) { Serial.onBoardState(f); }
+/* ===================== 連線這一段結束 ===================== */
+
+
+/* =====================================================================
+   2. 遊戲事件：接到球、遊戲結束、重來時，叫板子做什麼
+      想改燈色、聲音，改這三個函式就好（指令表見下面「叫板子做事」那排按鈕）
+   ===================================================================== */
+function onCatch(score) {
+  sendCommand("beep");
+}
+
+function onGameOver(score) {
+  sendCommand("red on");
+}
+
+function onRestart() {
+  sendCommand("off");
+}
+
+
+/* =====================================================================
+   3. 畫面與遊戲（可以請 AI 改）
+   ===================================================================== */
+const SETTINGS = {
+  ballSpeed: 110,      // 球往下掉的速度（每秒幾個點；畫面高 200 點）
+  paddleWidth: 70,     // 板子寬度（畫面寬 320 點）
+  paddleSpeed: 260,    // 用按鍵移動的速度（每秒幾個點）
+  lives: 3,            // 幾條命
+  knobThreshold: 150   // 旋鈕轉超過多少才接管位置（免得跟按鍵互搶）
+};
+
+const $ = function (id) { return document.getElementById(id); };
+const logBox = $("log");
+const logLines = [];
+function logLine(text) {
+  if (!text) return;
+  logLines.push(text);
+  if (logLines.length > 6) logLines.shift();
+  logBox.textContent = logLines.join("\n");
+}
+
+// ---- 連線按鈕與狀態 ----
+if (!Serial.supported) {
+  $("unsupported").hidden = false;
+  $("connectBtn").disabled = true;
+  $("status").textContent = "這個瀏覽器不能連板子";
+  $("statusHint").textContent = "可以先用鍵盤方向鍵玩；要連板子請用電腦版 Chrome 或 Edge。";
+}
+Serial.onStatus(function (kind, text) {
+  const st = $("status");
+  st.textContent = text;
+  st.className = kind;
+  const on = Serial.isConnected();
+  $("connectBtn").disabled = on || !Serial.supported;
+  $("disconnectBtn").disabled = !on;
+});
+$("connectBtn").addEventListener("click", function () { Serial.connect(); });
+$("disconnectBtn").addEventListener("click", function () { Serial.disconnect(); });
+
+document.querySelectorAll("[data-cmd]").forEach(function (b) {
+  b.addEventListener("click", function () {
+    if (!sendCommand(b.dataset.cmd)) logLine("（還沒連線：" + b.dataset.cmd + " 沒送出）");
+  });
+});
+function sendTyped() {
+  const v = $("cmdInput").value.trim();
+  if (!v) return;
+  if (!sendCommand(v)) logLine("（還沒連線：" + v + " 沒送出）");
+  $("cmdInput").value = "";
+}
+$("cmdSend").addEventListener("click", sendTyped);
+$("cmdInput").addEventListener("keydown", function (e) { if (e.key === "Enter") sendTyped(); });
+
+// ---- 板子狀態 ----
+const board = { knob: 0, light: 0, a: 0, b: 0, key: "", fresh: false };
+const KEY_TEXT = { left: "左", right: "右", up: "上", down: "下", ok: "確定" };
+let lastKey = "";
+let lastA = 0;
+let lastB = 0;
+
+onBoardState(function (s) {
+  board.knob = s.knob; board.light = s.light; board.a = s.a; board.b = s.b; board.key = s.key;
+  board.fresh = true;
+  $("knobVal").textContent = s.knob;
+  $("lightVal").textContent = s.light;
+  $("knobBar").style.width = Math.max(0, Math.min(100, s.knob / 40.95)) + "%";
+  $("lightBar").style.width = Math.max(0, Math.min(100, s.light / 40.95)) + "%";
+  $("pillA").classList.toggle("on", !!s.a);
+  $("pillB").classList.toggle("on", !!s.b);
+  $("pillKey").classList.toggle("on", !!s.key);
+  $("keyVal").textContent = s.key ? (KEY_TEXT[s.key] || s.key) : "-";
+  // 「剛按下」的瞬間：拿來開始／重來
+  if (s.key === "ok" && lastKey !== "ok") pressStart();
+  if (s.a && !lastA) pressStart();
+  if (s.b && !lastB) pressStart();
+  lastKey = s.key; lastA = s.a; lastB = s.b;
+  if (Serial.isConnected() && $("status").textContent.indexOf("等板子") >= 0) {
+    $("status").textContent = "已連線，收到板子的資料";
+  }
+});
+
+// 連線了卻一直沒資料：多半是板子上跑的不是第 15 課
+setInterval(function () {
+  if (Serial.isConnected() && Serial.msSinceLastLine() > 3000) {
+    const st = $("status");
+    st.textContent = "已連線，但 3 秒沒收到資料：板子上跑的是第 15 課嗎？按一下板子的 EN 重開看看。";
+    st.className = "err";
+  } else if (Serial.isConnected() && $("status").className === "err" && Serial.msSinceLastLine() < 500) {
+    $("status").textContent = "已連線，收到板子的資料";
+    $("status").className = "on";
+  }
+}, 500);
+
+// ---- 鍵盤 ----
+const keys = { left: false, right: false };
+window.addEventListener("keydown", function (e) {
+  if (e.target && e.target.tagName === "INPUT") return;
+  if (e.key === "ArrowLeft") { keys.left = true; e.preventDefault(); }
+  if (e.key === "ArrowRight") { keys.right = true; e.preventDefault(); }
+  if (e.key === " " || e.key === "Enter") { pressStart(); e.preventDefault(); }
+});
+window.addEventListener("keyup", function (e) {
+  if (e.key === "ArrowLeft") keys.left = false;
+  if (e.key === "ArrowRight") keys.right = false;
+});
+
+// ---- 遊戲 ----
+const canvas = $("game");
+const ctx = canvas.getContext("2d");
+const GW = canvas.width;
+const GH = canvas.height;
+const BALL_R = 7;
+const PADDLE_H = 8;
+const PADDLE_Y = GH - 16;
+
+const game = {
+  mode: "ready",       // ready（等開始）、play（玩）、over（結束）
+  score: 0,
+  lives: SETTINGS.lives,
+  px: (GW - SETTINGS.paddleWidth) / 2,
+  bx: GW / 2,
+  by: 30,
+  overAt: 0,
+  knobRef: null,
+  knobOn: false
+};
+
+function newBall() {
+  game.bx = BALL_R + Math.random() * (GW - 2 * BALL_R);
+  game.by = 24;
+}
+
+function pressStart() {
+  if (game.mode === "ready") {
+    startGame();
+  } else if (game.mode === "over" && performance.now() - game.overAt > 1000) {
+    onRestart();
+    startGame();
+  }
+}
+
+function startGame() {
+  game.mode = "play";
+  game.score = 0;
+  game.lives = SETTINGS.lives;
+  newBall();
+}
+
+function update(dt) {
+  if (game.mode !== "play") return;
+  const pw = SETTINGS.paddleWidth;
+  const goLeft = keys.left || board.a === 1 || board.key === "left";
+  const goRight = keys.right || board.b === 1 || board.key === "right";
+
+  // 旋鈕：真的轉了（超過門檻）才接管；按鍵一動就讓位
+  if (game.knobRef === null && board.fresh) game.knobRef = board.knob;
+  if (goLeft || goRight) {
+    game.knobOn = false;
+    game.knobRef = board.knob;
+    if (goLeft) game.px -= SETTINGS.paddleSpeed * dt;
+    if (goRight) game.px += SETTINGS.paddleSpeed * dt;
+  } else if (game.knobRef !== null && Math.abs(board.knob - game.knobRef) > SETTINGS.knobThreshold) {
+    game.knobOn = true;
+  }
+  if (game.knobOn) {
+    game.px = board.knob / 4095 * (GW - pw);
+    game.knobRef = board.knob;
+  }
+  game.px = Math.max(0, Math.min(GW - pw, game.px));
+
+  game.by += SETTINGS.ballSpeed * dt;
+  if (game.by + BALL_R >= PADDLE_Y && game.by - BALL_R < PADDLE_Y + PADDLE_H) {
+    if (game.bx > game.px - BALL_R && game.bx < game.px + pw + BALL_R) {
+      game.score += 1;
+      onCatch(game.score);
+      newBall();
+      return;
+    }
+  }
+  if (game.by - BALL_R > GH) {
+    game.lives -= 1;
+    if (game.lives <= 0) {
+      game.mode = "over";
+      game.overAt = performance.now();
+      onGameOver(game.score);
+    } else {
+      newBall();
+    }
+  }
+}
+
+function cssVar(name) {
+  return getComputedStyle(document.documentElement).getPropertyValue(name).trim();
+}
+
+function draw() {
+  const fg = cssVar("--game-fg");
+  ctx.fillStyle = cssVar("--game-bg");
+  ctx.fillRect(0, 0, GW, GH);
+  ctx.fillStyle = fg;
+  ctx.font = "16px system-ui, sans-serif";
+  ctx.textBaseline = "top";
+  ctx.textAlign = "left";
+  ctx.fillText("分數 " + game.score, 10, 8);
+  for (let i = 0; i < game.lives; i++) ctx.fillRect(GW - 18 - i * 16, 10, 10, 10);
+
+  ctx.fillRect(game.px, PADDLE_Y, SETTINGS.paddleWidth, PADDLE_H);
+  if (game.mode === "play") {
+    ctx.fillStyle = cssVar("--ball");
+    ctx.beginPath();
+    ctx.arc(game.bx, game.by, BALL_R, 0, Math.PI * 2);
+    ctx.fill();
+  }
+  ctx.fillStyle = fg;
+  ctx.textAlign = "center";
+  if (game.mode === "ready") {
+    ctx.font = "20px system-ui, sans-serif";
+    ctx.fillText("按空白鍵、A、B 或確定鍵開始", GW / 2, GH / 2 - 14);
+  } else if (game.mode === "over") {
+    ctx.font = "22px system-ui, sans-serif";
+    ctx.fillText("遊戲結束：" + game.score + " 分", GW / 2, GH / 2 - 26);
+    ctx.font = "15px system-ui, sans-serif";
+    ctx.fillText("按空白鍵、A、B 或確定鍵重來", GW / 2, GH / 2 + 6);
+  }
+}
+
+let lastT = performance.now();
+function loop(t) {
+  const dt = Math.min(0.1, (t - lastT) / 1000);
+  lastT = t;
+  update(dt);
+  draw();
+  requestAnimationFrame(loop);
+}
+requestAnimationFrame(loop);
+</script>
+</body>
+</html>

@@ -27,8 +27,9 @@ if [ -z "$1" ]; then
     echo "[1/4] 上傳 lib/ssd1306.py、lib/zhfont.py ..."
     $MPREMOTE cp esp32/lib/ssd1306.py :lib/ssd1306.py || exit 1
     $MPREMOTE cp esp32/lib/zhfont.py :lib/zhfont.py || exit 1
-    echo "[2/4] 上傳 lib/ezkit.py ..."
+    echo "[2/4] 上傳 lib/ezkit.py、lib/irkeys.py ..."
     $MPREMOTE cp esp32/lib/ezkit.py :lib/ezkit.py || exit 1
+    $MPREMOTE cp esp32/lib/irkeys.py :lib/irkeys.py || exit 1
 
     # 上傳 demos
     echo "[3/4] 上傳 demos/ ..."
@@ -65,6 +66,7 @@ else
     $MPREMOTE cp esp32/lib/ssd1306.py :lib/ssd1306.py || exit 1
     $MPREMOTE cp esp32/lib/zhfont.py :lib/zhfont.py || exit 1
     $MPREMOTE cp esp32/lib/ezkit.py :lib/ezkit.py || exit 1
+    $MPREMOTE cp esp32/lib/irkeys.py :lib/irkeys.py || exit 1   # 第 13～15 課的紅外線認鍵（板子上的 ir_keys.json 不會被動到）
 
     # 把課程上傳為 main.py
     $MPREMOTE cp "$LESSON" :main.py || exit 1

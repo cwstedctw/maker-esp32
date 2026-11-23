@@ -228,7 +228,10 @@
         "d9_full_demo",
         "d10_wifi_web",
         "d11_ble_remote",
-        "d12_aqi_telegram"
+        "d12_aqi_telegram",
+        "d13_ir_remote",
+        "d14_oled_game",
+        "d15_web_serial"
       ]
     }
   ]

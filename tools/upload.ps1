@@ -68,8 +68,9 @@ if (!$Lesson) {
     Invoke-Mp @("cp", "esp32/lib/ssd1306.py", ":lib/ssd1306.py")
     Invoke-Mp @("cp", "esp32/lib/zhfont.py", ":lib/zhfont.py")
 
-    Write-Host "[2/4] 上傳 lib/ezkit.py ..." -ForegroundColor Yellow
+    Write-Host "[2/4] 上傳 lib/ezkit.py、lib/irkeys.py ..." -ForegroundColor Yellow
     Invoke-Mp @("cp", "esp32/lib/ezkit.py", ":lib/ezkit.py")
+    Invoke-Mp @("cp", "esp32/lib/irkeys.py", ":lib/irkeys.py")
 
     # 上傳 demos
     Write-Host "[3/4] 上傳 demos/ ..." -ForegroundColor Yellow
@@ -110,6 +111,8 @@ if (!$Lesson) {
     Invoke-Mp @("cp", "esp32/lib/ssd1306.py", ":lib/ssd1306.py")
     Invoke-Mp @("cp", "esp32/lib/zhfont.py", ":lib/zhfont.py")
     Invoke-Mp @("cp", "esp32/lib/ezkit.py", ":lib/ezkit.py")
+    # 第 13～15 課的紅外線認鍵（板子上的 ir_keys.json 不會被動到）
+    Invoke-Mp @("cp", "esp32/lib/irkeys.py", ":lib/irkeys.py")
 
     # 把課程上傳為 main.py
     Invoke-Mp @("cp", $lessonFile, ":main.py")

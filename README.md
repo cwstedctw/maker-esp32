@@ -19,12 +19,18 @@
 esp32/                  上傳到 ESP32 的檔案
   boot.py、main.py      開機初始化、選單（按 B 換課、長按 A 執行）
   lib/ezkit.py          共用硬體模組（所有元件腳位）
+  lib/irkeys.py         紅外線遙控器認鍵（第 13～15 課用；記好的鍵存在板子上的 ir_keys.json）
   lib/ssd1306.py        OLED 驅動（micropython-lib，MIT；韌體沒內建）
   lib/zhfont.py         中文點陣字型
   demos/d1_led.py … d9_full_demo.py   九課範例（板上元件）
   demos/d10_wifi_web.py   第 10 課：WiFi 網頁遙控（手機開網頁控制板子）
   demos/d11_ble_remote.py 第 11 課：藍牙遙控（手機 App 控制板子）
   demos/d12_aqi_telegram.py 第 12 課：上網抓空氣品質 → OLED → Telegram（要連能上網的 2.4 GHz 熱點）
+  demos/d13_ir_remote.py  第 13 課：遙控器學習機（看按鍵碼、記五個鍵、用遙控器換燈色）
+  demos/d14_oled_game.py  第 14 課：OLED 接球遊戲（遙控器、A／B 按鈕、旋鈕都能玩）
+  demos/d15_web_serial.py 第 15 課：板子用 USB 送狀態給網頁（搭配 web/game.html）
+web/
+  game.html             第 15 課的網頁遊戲：電腦版 Chrome／Edge 直接打開，按「連接板子」
 tools/
   check_env.ps1         Windows 環境檢查（-Fix 自動修部分項目）
   upload.ps1            Windows 上傳（VS Code 任務會呼叫它）
