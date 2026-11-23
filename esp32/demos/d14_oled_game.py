@@ -3,7 +3,7 @@
 # ============================================
 # 學習目標：
 #   - 做一個會動的小遊戲：球從上面掉下來，用底下的板子接住
-#   - 三種控制可以同時用：遙控器左右鍵、板子 A（往左）B（往右）、轉旋鈕
+#   - 三種控制可以同時用：遙控器左右鍵、板子 B（往左）A（往右）、轉旋鈕
 #   - 了解「遊戲迴圈」：讀輸入 → 更新位置 → 畫畫面，一秒重複二十幾次
 #
 # 怎麼玩：
@@ -58,7 +58,8 @@ def read_knob():
 
 def knob_to_x(v):
     """旋鈕 0～4095 → 板子左邊的 x（0～128 減板子寬）"""
-    return v * (W - PADDLE_W) // 4095
+    # 這塊板子的旋鈕往右轉（順時針）讀數變小，所以倒過來算，往右轉板子才會往右
+    return (4095 - v) * (W - PADDLE_W) // 4095
 
 
 def new_ball():
@@ -155,8 +156,8 @@ def play():
         # 1) 讀輸入：遙控器、按鈕、旋鈕
         ir.poll()                                    # 遊戲中只看「按著哪個鍵」，剛按下的事件丟掉
         key = ir.name(ir.held())
-        go_left = key == "left" or btn_a.value() == 0
-        go_right = key == "right" or btn_b.value() == 0
+        go_left = key == "left" or btn_b.value() == 0     # 板子上 B 鍵在左邊
+        go_right = key == "right" or btn_a.value() == 0   # A 鍵在右邊
 
         k = read_knob()
         if go_left or go_right:

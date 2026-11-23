@@ -134,7 +134,7 @@ def draw(knob, light, a, b, key):
     ir.show(oled)             # 用 ir.show，不要用 oled.show()（會干擾收訊號）
 
 
-print("第 15 課：網頁遊戲。板子開始送資料（每 50 毫秒一行）")
+print("第 15 課：網頁遊戲。板子開始送資料（有變化時最快每 50 毫秒一行）")
 if not ir.keys:
     print("沒有 ir_keys.json：遙控器的 key 會一直是空的（要用遙控器請先跑第 13 課記鍵）")
 

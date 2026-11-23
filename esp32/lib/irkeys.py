@@ -279,6 +279,53 @@ def _nec(d):
     return _FRAME, b0 | (b1 << 8) | (b2 << 16)
 
 
+def _distance(d):
+    """NEC 以外最常見的一類（Panasonic、JVC、Samsung……）：開頭一段長亮＋長暗，
+    後面每個位元都是「一段短亮＋一段暗」，暗的短＝0、暗的長（約 3 倍）＝1。
+    2026-11-23 實板量到的遙控器就是這種：開頭 3.4 ms 亮＋1.8 ms 暗，48 個位元，
+    亮約 0.4 ms，暗約 0.47 ms（0）或 1.35 ms（1），按住時每 0.13 秒整串重送一次。
+    檢查得很嚴：只要有一段長度不像樣（多半是程式剛好在忙、時間記晚了），
+    就回報「訊號不完整」，寧可漏一次，也不要給出一個錯的號碼。"""
+    n = len(d)
+    if n < 2 + 2 * 12:
+        return _NONE, None
+    if d[0] < 1800 or d[1] < 1000:
+        return _NONE, None               # 沒有長長的開頭：不是這一類
+    marks = sorted(d[2::2])
+    unit = marks[len(marks) // 2]        # 亮的長度取中位數當基準
+    if not (200 <= unit <= 900):
+        return _NONE, None
+    nbits = (n - 2) // 2
+    long_marks = 0
+    for i in range(nbits):
+        m = d[2 + 2 * i]
+        if m * 10 > unit * 16:
+            long_marks += 1
+    if long_marks * 4 >= nbits:
+        return _NONE, None               # 亮的長度有長有短（Sony 那一類）：交給「長短樣子」算號碼
+    value = 0
+    for i in range(nbits):
+        m = d[2 + 2 * i]
+        s = d[3 + 2 * i]
+        if not (unit * 4 <= m * 10 <= unit * 19):
+            return _BAD, None
+        if s * 10 <= unit * 4:
+            return _BAD, None
+        if s * 10 <= unit * 21:
+            pass                         # 短的暗：0
+        elif s * 10 <= unit * 48:
+            value |= 1 << i              # 長的暗：1
+        else:
+            return _BAD, None
+    h = 0x811C9DC5
+    v = value
+    for _ in range((nbits + 7) // 8):
+        h = ((h ^ (v & 0xFF)) * 0x01000193) & 0xFFFFFFFF
+        v >>= 8
+    h = ((h ^ nbits) * 0x01000193) & 0xFFFFFFFF
+    return _FRAME, 0x1000000 | ((h ^ (h >> 24)) & 0xFFFFFF)
+
+
 def _shape_code(d):
     """不是 NEC：把每一段分成「短」或「長」，再把整串短長算成一個號碼（FNV 雜湊）。
     - 開頭兩段（引導用的長亮、長暗）不算，它們每個鍵都一樣，長度又最容易跑掉。
@@ -321,4 +368,9 @@ def decode(buf, n):
         return kind, code
     if glitches > 3:
         return _BAD, None       # 雜訊太多（多半是程式卡住、時間記錯了）：寧可不認，也不要給錯的號碼
+    kind, code = _distance(d)
+    if kind != _NONE:
+        return kind, code
+    if len(d) >= 40 and d[0] < 1800:
+        return _BAD, None       # 很長一串卻沒有開頭：多半是只收到後半段，不給號碼
     return _shape_code(d)

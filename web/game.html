@@ -179,7 +179,7 @@
     <section class="card">
       <h2>接球遊戲</h2>
       <canvas id="game" width="320" height="200" aria-label="接球遊戲畫面"></canvas>
-      <p class="hint">轉旋鈕＝板子跟著移動；A／B、遙控器左右鍵、鍵盤方向鍵＝往左往右。結束後按空白鍵、A、B 或遙控器確定鍵重來。</p>
+      <p class="hint">轉旋鈕＝板子跟著移動；B（左）A（右）、遙控器左右鍵、鍵盤方向鍵＝往左往右。結束後按空白鍵、A、B 或遙控器確定鍵重來。</p>
     </section>
   </div>
 
@@ -522,8 +522,8 @@ function startGame() {
 function update(dt) {
   if (game.mode !== "play") return;
   const pw = SETTINGS.paddleWidth;
-  const goLeft = keys.left || board.a === 1 || board.key === "left";
-  const goRight = keys.right || board.b === 1 || board.key === "right";
+  const goLeft = keys.left || board.b === 1 || board.key === "left";    // 板子上 B 鍵在左邊
+  const goRight = keys.right || board.a === 1 || board.key === "right"; // A 鍵在右邊
 
   // 旋鈕：真的轉了（超過門檻）才接管；按鍵一動就讓位
   if (game.knobRef === null && board.fresh) game.knobRef = board.knob;
@@ -536,7 +536,7 @@ function update(dt) {
     game.knobOn = true;
   }
   if (game.knobOn) {
-    game.px = board.knob / 4095 * (GW - pw);
+    game.px = (4095 - board.knob) / 4095 * (GW - pw);   // 旋鈕往右轉讀數變小，倒過來算
     game.knobRef = board.knob;
   }
   game.px = Math.max(0, Math.min(GW - pw, game.px));
